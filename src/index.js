@@ -1,15 +1,49 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import { Provider } from 'react-redux';
-import { PersistGate } from 'redux-persist/integration/react';
-import { store, persistor } from './components/redux/store';
-import App from './components/App';
+import { program } from "commander";
+import {
+  listContacts,
+  getContactById,
+  removeContact,
+  addContact,
+} from "./contacts.js";
 
-ReactDOM.render(
-  <Provider store={store}>
-    <PersistGate loading={null} persistor={persistor}>
-      <App />
-    </PersistGate>
-  </Provider>,
-  document.getElementById('root')
-);
+program
+  .option("-a, --action <type>", "choose action")
+  .option("-i, --id <type>", "user id")
+  .option("-n, --name <type>", "user name")
+  .option("-e, --email <type>", "user email")
+  .option("-p, --phone <type>", "user phone");
+
+program.parse();
+
+const options = program.opts();
+
+async function invokeAction({ action, id, name, email, phone }) {
+  switch (action) {
+    case "list":
+      await listContacts()
+        .then((contacts) => console.table(contacts))
+        .catch((error) => console.log(error.message));
+      break;
+
+    case "get":
+      await getContactById(id)
+        .then((contact) => console.log(contact))
+        .catch((error) => console.log(error.message));
+      break;
+
+    case "add":
+      await addContact(name, email, phone)
+        .then((contact) => console.log(contact))
+        .catch((error) => console.log(error.message));
+      break;
+
+    case "remove":
+      await removeContact(id);
+      break;
+
+    default:
+      console.warn("\x1B[31m Unknown action type!");
+  }
+}
+
+invokeAction(options);
